@@ -1,1 +1,5 @@
-# ObjectTrackingCV_CXX
+- главный файл ObjectTrackingCV.cpp
+	- создается трекер EuclideanDistTracker.cpp
+	- нахождение контуров объектов FindCont.cpp
+	- выполнение алгоритма TrackingAlgorithm.cpp
+		-поиск гистограмм и их сранвение CallHistogram.cpp
