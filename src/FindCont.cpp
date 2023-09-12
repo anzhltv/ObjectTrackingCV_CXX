@@ -1,15 +1,15 @@
-#include "FindCont.h"
+п»ї#include "FindCont.h"
 
 
 
 FindCont::FindCont() {}
 
 /*Subtractor
- метод для получение кординат бокса с объектом
+ РјРµС‚РѕРґ РґР»СЏ РїРѕР»СѓС‡РµРЅРёРµ РєРѕСЂРґРёРЅР°С‚ Р±РѕРєСЃР° СЃ РѕР±СЉРµРєС‚РѕРј
  Input:
- frame1 - кадр с которым производится вычитание, frame2 - новый кадр , kern - размер ядра, iter - количество итераций
+ frame1 - РєР°РґСЂ СЃ РєРѕС‚РѕСЂС‹Рј РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РІС‹С‡РёС‚Р°РЅРёРµ, frame2 - РЅРѕРІС‹Р№ РєР°РґСЂ , kern - СЂР°Р·РјРµСЂ СЏРґСЂР°, iter - РєРѕР»РёС‡РµСЃС‚РІРѕ РёС‚РµСЂР°С†РёР№
  Output:
- заполненный вектор detections
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РІРµРєС‚РѕСЂ detections
 */
 auto FindCont::Subtractor(const cv::Mat frame1, const cv::Mat frame2, int kern, int iter) 
 {
@@ -25,11 +25,11 @@ auto FindCont::Subtractor(const cv::Mat frame1, const cv::Mat frame2, int kern, 
 
 
 /*DetectContour
- метод для получение кординат бокса с объектом
+ РјРµС‚РѕРґ РґР»СЏ РїРѕР»СѓС‡РµРЅРёРµ РєРѕСЂРґРёРЅР°С‚ Р±РѕРєСЃР° СЃ РѕР±СЉРµРєС‚РѕРј
  Input:
- size - минимальный размер бокса, contours - контур объекта, detections - вектор для записи результата
+ size - РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ Р±РѕРєСЃР°, contours - РєРѕРЅС‚СѓСЂ РѕР±СЉРµРєС‚Р°, detections - РІРµРєС‚РѕСЂ РґР»СЏ Р·Р°РїРёСЃРё СЂРµР·СѓР»СЊС‚Р°С‚Р°
  Output:
- заполненный вектор detections
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РІРµРєС‚РѕСЂ detections
 */
 void FindCont::DetectContour(int size, std::vector<std::vector<cv::Point>> contours, std::vector<cv::Rect>& detections) 
 {
@@ -44,11 +44,11 @@ void FindCont::DetectContour(int size, std::vector<std::vector<cv::Point>> conto
 
 
 /*GettingCoordinates
- метод для для объединения метода Substractor и DetectContour
+ РјРµС‚РѕРґ РґР»СЏ РґР»СЏ РѕР±СЉРµРґРёРЅРµРЅРёСЏ РјРµС‚РѕРґР° Substractor Рё DetectContour
  Input:
- frame1 - кадр с которым производится вычитание, frame2 - новый кадр , kern - размер ядра, iter - количество итераций, size - минимальный размер бокса
+ frame1 - РєР°РґСЂ СЃ РєРѕС‚РѕСЂС‹Рј РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РІС‹С‡РёС‚Р°РЅРёРµ, frame2 - РЅРѕРІС‹Р№ РєР°РґСЂ , kern - СЂР°Р·РјРµСЂ СЏРґСЂР°, iter - РєРѕР»РёС‡РµСЃС‚РІРѕ РёС‚РµСЂР°С†РёР№, size - РјРёРЅРёРјР°Р»СЊРЅС‹Р№ СЂР°Р·РјРµСЂ Р±РѕРєСЃР°
  Output:
- заполненный вектор detections
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РІРµРєС‚РѕСЂ detections
 */
 std::vector<cv::Rect> FindCont::GettingCoordinates(cv::Mat frame1, cv::Mat frame2, int kern, int iter, int size)
 {

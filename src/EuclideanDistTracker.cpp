@@ -1,4 +1,4 @@
-#include "EuclideanDistTracker.h"
+﻿#include "EuclideanDistTracker.h"
 #include <iostream>
 #include <cmath>
 

@@ -1,4 +1,4 @@
-#include "CallHistogram.h"
+п»ї#include "CallHistogram.h"
 
 constexpr auto EPSILON = 1e-6;
 constexpr auto ALPHA = 0.1;
@@ -23,11 +23,11 @@ cv::Mat EqualizeHistFrame(cv::Mat frameHistNew)
 }
 
 /*image_hist
- метод для накопления гистограмм
+ РјРµС‚РѕРґ РґР»СЏ РЅР°РєРѕРїР»РµРЅРёСЏ РіРёСЃС‚РѕРіСЂР°РјРј
  Input:
- frameHistNew - бокс с объектом, arrHist - массив куда накапливаются гистограммы объектов, idGlobal - id текущего объекта по порядку
+ frameHistNew - Р±РѕРєСЃ СЃ РѕР±СЉРµРєС‚РѕРј, arrHist - РјР°СЃСЃРёРІ РєСѓРґР° РЅР°РєР°РїР»РёРІР°СЋС‚СЃСЏ РіРёСЃС‚РѕРіСЂР°РјРјС‹ РѕР±СЉРµРєС‚РѕРІ, idGlobal - id С‚РµРєСѓС‰РµРіРѕ РѕР±СЉРµРєС‚Р° РїРѕ РїРѕСЂСЏРґРєСѓ
  Output:
- заполненный массив arrHist
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ arrHist
 */
 void ImageHist(cv::Mat frameHistNew, std::vector<cv::Mat>& arrHist, int idGlobal) 
 {
@@ -50,12 +50,12 @@ void ImageHist(cv::Mat frameHistNew, std::vector<cv::Mat>& arrHist, int idGlobal
 
 
 /*SearchCompare
- метод подсчета совпадений
+ РјРµС‚РѕРґ РїРѕРґСЃС‡РµС‚Р° СЃРѕРІРїР°РґРµРЅРёР№
  Input:
- idGlobal - id текущего объекта по порядку, optParam - наименьший параметр схожести,
- arrID - массив, содержащий количество совпадений с каждым существующим id
+ idGlobal - id С‚РµРєСѓС‰РµРіРѕ РѕР±СЉРµРєС‚Р° РїРѕ РїРѕСЂСЏРґРєСѓ, optParam - РЅР°РёРјРµРЅСЊС€РёР№ РїР°СЂР°РјРµС‚СЂ СЃС…РѕР¶РµСЃС‚Рё,
+ arrID - РјР°СЃСЃРёРІ, СЃРѕРґРµСЂР¶Р°С‰РёР№ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРѕРІРїР°РґРµРЅРёР№ СЃ РєР°Р¶РґС‹Рј СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРј id
  Output:
- заполненный массив arrID
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ arrID
 */
 void SearchCompare(int idGlobal, double optParam, std::vector<int>& arrID, std::vector<cv::Mat>& arrayHist) 
 {
@@ -94,12 +94,12 @@ void SearchCompare(int idGlobal, double optParam, std::vector<int>& arrID, std::
 
 
 /*
- Метод для накопления гистограмм и поиска сравнения новой гистограммы с уже имеющимимся
+ РњРµС‚РѕРґ РґР»СЏ РЅР°РєРѕРїР»РµРЅРёСЏ РіРёСЃС‚РѕРіСЂР°РјРј Рё РїРѕРёСЃРєР° СЃСЂР°РІРЅРµРЅРёСЏ РЅРѕРІРѕР№ РіРёСЃС‚РѕРіСЂР°РјРјС‹ СЃ СѓР¶Рµ РёРјРµСЋС‰РёРјРёРјСЃСЏ
  Input:
- frameHistNew - бокс с объектом, arrHist - массив куда накапливаются гистограммы объектов, idGlobal - id текущего объекта по порядку, 
- optParam - наименьший параметр схожести, arrID - массив, содержащий количество совпадений с каждым существующим id
+ frameHistNew - Р±РѕРєСЃ СЃ РѕР±СЉРµРєС‚РѕРј, arrHist - РјР°СЃСЃРёРІ РєСѓРґР° РЅР°РєР°РїР»РёРІР°СЋС‚СЃСЏ РіРёСЃС‚РѕРіСЂР°РјРјС‹ РѕР±СЉРµРєС‚РѕРІ, idGlobal - id С‚РµРєСѓС‰РµРіРѕ РѕР±СЉРµРєС‚Р° РїРѕ РїРѕСЂСЏРґРєСѓ, 
+ optParam - РЅР°РёРјРµРЅСЊС€РёР№ РїР°СЂР°РјРµС‚СЂ СЃС…РѕР¶РµСЃС‚Рё, arrID - РјР°СЃСЃРёРІ, СЃРѕРґРµСЂР¶Р°С‰РёР№ РєРѕР»РёС‡РµСЃС‚РІРѕ СЃРѕРІРїР°РґРµРЅРёР№ СЃ РєР°Р¶РґС‹Рј СЃСѓС‰РµСЃС‚РІСѓСЋС‰РёРј id
  Output:
- заполненный массив arrHist и arrID 
+ Р·Р°РїРѕР»РЅРµРЅРЅС‹Р№ РјР°СЃСЃРёРІ arrHist Рё arrID 
 */
 void CallHistogram(cv::Mat frameHistNew, std::vector<cv::Mat>& arrHist, int idGlobal, double optParam, std::vector<int>& arrID)
 {

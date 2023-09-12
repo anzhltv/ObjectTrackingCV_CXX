@@ -1,10 +1,6 @@
 ﻿#include "FindCont.h"
 #include "TrackingAlgorithm.h"
-#include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/video/tracking.hpp>
-#include <chrono>
 #include <vector>
 #include <iostream>
 
@@ -27,14 +23,14 @@ int main()
 
     cv::VideoCapture cap1(path1);
     cv::VideoCapture cap2(path2);
-    cv::Mat frame1_1, frame2_2; // Кадры для первой и второй камеры
-    cap1.read(frame1_1);
-    cap2.read(frame2_2);
+    cv::Mat frameL, frameR; // Кадры для первой и второй камеры
+    cap1.read(frameL);
+    cap2.read(frameR);
 
     const int width = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
     const int height = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-    frame2_2 = frame2_2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height)); // Обрезка кадра
+    frameR = frameR(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height)); // Обрезка кадра
 
     const auto size1 = static_cast<int>(PERSENT_SIZE_BOX_L * width * height); // Минимальные размеры боксов
     const auto size2 = static_cast<int>(PERSENT_SIZE_BOX_R * width * height);
@@ -65,8 +61,8 @@ int main()
         roi2 = frame2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height));
 
         FindCont findCont;
-        auto detections1 = findCont.GettingCoordinates(frame1_1, frame1, 2, 3, size1);
-        auto detections2 = findCont.GettingCoordinates(frame2_2, roi2, 3, 7, size2);
+        auto detections1 = findCont.GettingCoordinates(frameL, frame1, 2, 3, size1);
+        auto detections2 = findCont.GettingCoordinates(frameR, roi2, 3, 7, size2);
 
         trackAlg[0].updateCameraTracking(detections1, 0, frame1, count_same, vector_hist, tracker, trackAlg[1]);
         trackAlg[1].updateCameraTracking(detections2, 1, roi2, count_same, vector_hist, tracker, trackAlg[0]);
