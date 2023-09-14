@@ -7,15 +7,15 @@ const std::vector<float> OPT_PARAM = { 0.5f, 0.21f }; // Границы срав
 constexpr auto PART_FRAME = 6; // Часть от общего числа кадров проверки
 
 
-/* FindMaxSameId
- метод для определения корректного айди для объекта
- если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
- то отдаем объекту найденный айди,
- иначе айди по порядку
- Input:
- idGlobal - айди текущего объекта
- Output:
- корректный айди объекта
+/*
+метод для определения корректного айди для объекта
+если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
+то отдаем объекту найденный айди,
+иначе айди по порядку
+Input:
+idGlobal - айди текущего объекта
+Output:
+корректный айди объекта
 */
 auto TrackingAlgorithm::FindMaxSameId(int idGlobal) 
 {
@@ -24,108 +24,78 @@ auto TrackingAlgorithm::FindMaxSameId(int idGlobal)
     if (*std::max_element(arrayID_list.begin(), arrayID_list.end()) >= COUNT_FRAME / PART_FRAME)
     {
         // То берем найденный id
-        const auto idCorr = static_cast<int>(std::distance(arrayID_list.begin(), std::max_element(arrayID_list.begin(), arrayID_list.end())));
-        return idCorr;
+        idGlobal = static_cast<int>(std::distance(arrayID_list.begin(), std::max_element(arrayID_list.begin(), arrayID_list.end())));
+        
     }
-    else 
-    {
-        // Иначе следующий по порядку
-        const auto idCorr = idGlobal;
-        return idCorr;
-    }
+    return idGlobal;
 }
 
 
-
 /*
- метод на случай, если найден тот же объект
- если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
- то очищаем текущий элемент с собранным вектором для этого объекта, так как он уже есть
- + увеличиваем количество совпадающих объектов
- Input:
+метод на случай, если найден тот же объект
+если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
+то очищаем текущий элемент с собранным вектором для этого объекта, так как он уже есть
++ увеличиваем количество совпадающих объектов
+Input:
 arrayHist - массив с накопленными гистограммами, countSame - подсчет одинаковых элементов, idSave - айди предыдущего объекта
- Output:
- количество одинаковых элементов
- */
-int TrackingAlgorithm::SameObject(std::vector<cv::Mat>& arrayHist, int countSame, int idSave) 
+Output:
+количество одинаковых элементов
+*/
+int TrackingAlgorithm::SameObjectCore(std::vector<cv::Mat>& arrayHist, int countSame, int idSave, std::vector<int>& arrID)
 {
     //если был найден существующий объект, то очистка собранного вектора и массива id + увеличение числа совпадающих объектов
-    auto maxEl = arrayID[0];
-    for (auto i = 1; i < arrayID.size(); ++i) 
+    std::vector<int>::iterator maxEl = std::max_element(arrID.begin(), arrID.end());
+    if (*maxEl >= COUNT_FRAME / PART_FRAME)
     {
-        if (arrayID[i] > maxEl) 
-        {
-            maxEl = arrayID[i];
-        }
-    }
-    if (maxEl >= COUNT_FRAME / PART_FRAME)
-    {
-        try
-        {
-            arrayHist[idSave - countSame] = cv::Mat();
-        }
-        catch (const std::exception& e)
-        {
-            std::cout << "\n Error! " << e.what();
-        }
-        
+        arrayHist[idSave - countSame] = cv::Mat();
         ++countSame;
     }
-    std::for_each(arrayID.begin(), arrayID.end(), [](int& value) {
+    std::for_each(arrID.begin(), arrID.end(), [](int& value) 
+        {
         value = 0;
-        });
-    //arrayID.clear();
+        }
+    );
     return countSame;
 }
 
+
 /*
- перегрузка для метода на случай, если найден тот же объект, для второй камеры, в этом случае берем массив айди из другого объекта класса
- если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
- то очищаем текущий элемент с собранным вектором для этого объекта, так как он уже есть
- + увеличиваем количество совпадающих объектов
- Input:
+метод на случай, если найден тот же объект
+если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
+то очищаем текущий элемент с собранным вектором для этого объекта, так как он уже есть
++ увеличиваем количество совпадающих объектов
+Input:
 arrayHist - массив с накопленными гистограммами, countSame - подсчет одинаковых элементов, idSave - айди предыдущего объекта
- Output:
- количество одинаковых элементов
+Output:
+количество одинаковых элементов
+ */
+int TrackingAlgorithm::SameObject(std::vector<cv::Mat>& arrayHist, int countSame, int idSave)
+{
+    return SameObjectCore(arrayHist, countSame, idSave, arrayID);
+}
+
+/*
+перегрузка для метода на случай, если найден тот же объект, для второй камеры, в этом случае берем массив айди из другого объекта класса
+если максимальное число совпадений больше, чем хотя бы 1/6 от количества кадров проверки,
+то очищаем текущий элемент с собранным вектором для этого объекта, так как он уже есть
++ увеличиваем количество совпадающих объектов
+Input:
+arrayHist - массив с накопленными гистограммами, countSame - подсчет одинаковых элементов, idSave - айди предыдущего объекта, arrID - массив содержащий совпадения с существующими объектами для второй камеры 
+Output:
+количество одинаковых элементов
  */
 int TrackingAlgorithm::SameObject(std::vector<cv::Mat>& arrayHist, int countSame, int idSave, std::vector<int>& arrID)
 {
-    //если был найден существующий объект, то очистка собранного вектора и массива id + увеличение числа совпадающих объектов
-    auto maxEl = arrID[0];
-    for (auto i = 1; i < arrID.size(); ++i)
-    {
-        if (arrID[i] > maxEl) 
-        {
-            maxEl = arrID[i];
-        }
-    }
-    if (maxEl >= COUNT_FRAME / PART_FRAME)
-    {
-        try
-        {
-            arrayHist[idSave - countSame] = cv::Mat();
-        }
-        catch (const std::exception& e)
-        {
-            std::cout << "\n Error! " << e.what();
-        }
-
-        ++countSame;
-    }
-    std::for_each(arrID.begin(), arrID.end(), [](int& value) {
-        value = 0;
-        });
-    //arrID.clear();
-    return countSame;
+    return SameObjectCore(arrayHist, countSame, idSave, arrID);
 }
 
 
 /*
- метод для увеличения countSame - если появился новый объект, а старый был определен к уже существующим
- Input:
- id текущего объекта по порядку, numCam, numCam2 - номер текущей и другой камеры, countSame - количество одинаковых объектов, arrayHist - сохраненные гистограммы, trackAlg - объект класса алгоритма с другой камеры
- Output:
- заполненный массив arrayID
+метод для увеличения countSame - если появился новый объект, а старый был определен к уже существующим
+Input:
+id текущего объекта по порядку, numCam, numCam2 - номер текущей и другой камеры, countSame - количество одинаковых объектов, arrayHist - сохраненные гистограммы, trackAlg - объект класса алгоритма с другой камеры
+Output:
+заполненный массив arrayID
 */
 void TrackingAlgorithm::NewObject(int id, int numCam, int numCam2, int& countSame, std::vector<cv::Mat>& arrayHist, TrackingAlgorithm& trackAlg) 
 {
@@ -147,19 +117,19 @@ void TrackingAlgorithm::NewObject(int id, int numCam, int numCam2, int& countSam
 
 
 /*
- метод для определения нового объекта на полученном кадре
- Input:
- idsBoxes - координаты бокса и id нового объекта, numCam - номер камеры, frame - сам кадр, countSame - количество одинаковых объектов, 
- vectorHist - сохраненные гистограммы, tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
- Output:
- верно определенный id объекта и бокс на кадре
+метод для определения айди нового объекта на полученном кадре
+Input:
+idsBoxes - координаты бокса и id нового объекта, numCam - номер камеры, frame - сам кадр, countSame - количество одинаковых объектов, 
+vectorHist - сохраненные гистограммы, tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
+Output:
+верно определенный id объекта и бокс на кадре
 */
-void TrackingAlgorithm::CameraTracking(std::vector<std::vector<int>> idsBoxes, int numCam, cv::Mat frame, int& countSame,
+void TrackingAlgorithm::CameraTracking(const std::vector<std::vector<int>> &idsBoxes, int numCam, const cv::Mat &frame, int& countSame,
     std::vector<cv::Mat>& vectorHist, std::vector<EuclideanDistTracker>& tracker, TrackingAlgorithm& trackAlg)
 {
     auto numCam2 = (numCam + 1) % 2;
 
-    for (std::vector<int>& box_id : idsBoxes) 
+    for (const auto & box_id : idsBoxes) 
     {
         auto x = box_id[0];
         auto y = box_id[1];
@@ -193,14 +163,15 @@ void TrackingAlgorithm::CameraTracking(std::vector<std::vector<int>> idsBoxes, i
 }
 
 
+
 /*
- метод для обновления трекера, получения гистограмм, поиск сравнения, выполнение алгоритма
- Input:
- detections - координаты бокса , numCam - номер камеры, frame -  кадр, countSame - количество одинаковых объектов, vectorHist - сохраненные гистограммы , tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
- Output:
- бокс с верно определнным айди на кадре
+метод для обновления трекера, получения гистограмм, поиск сравнения, выполнение алгоритма
+Input:
+detections - координаты бокса , numCam - номер камеры, frame -  кадр, countSame - количество одинаковых объектов, vectorHist - сохраненные гистограммы , tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
+Output:
+бокс с верно определнным айди на кадре
 */
-void TrackingAlgorithm::updateCameraTracking(std::vector<cv::Rect> detections, int numCam, cv::Mat frame, int& countSame, std::vector<cv::Mat>& vectorHist, std::vector<EuclideanDistTracker>& tracker, TrackingAlgorithm& trackAlg)
+void TrackingAlgorithm::updateCameraTracking(std::vector<cv::Rect> &detections, int numCam, cv::Mat frame, int& countSame, std::vector<cv::Mat>& vectorHist, std::vector<EuclideanDistTracker>& tracker, TrackingAlgorithm& trackAlg)
 {
     report = true;
     // Обновление трекера

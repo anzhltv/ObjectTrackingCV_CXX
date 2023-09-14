@@ -7,9 +7,16 @@
 class EuclideanDistTracker 
 {
 public:
-    int idCount;
+    int idCount; //подсчет объектов в камере
     EuclideanDistTracker();
-    std::vector<std::vector<int>> update(std::vector<cv::Rect>& objectsRect);
+    /*
+    метод для трекинга на одном кадре
+    Input
+    objectsRect - x,y,w,h объекта
+    Output
+    координаты объекта и верно определенный id объекта
+    */
+    std::vector<std::vector<int>> update(const std::vector<cv::Rect>& objectsRect); //обновление трекера 
 private:
     std::map<int, cv::Point2i> centerPoints;
 };

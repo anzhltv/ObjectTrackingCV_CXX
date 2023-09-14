@@ -4,7 +4,9 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
-
+constexpr auto BORDER_Y = 50;
+constexpr auto Y_PLUS = 30;
+constexpr auto Y_MINUS = 15;
 
 // Метод для вычисления площади прямоугольника
 // Вход:
@@ -24,7 +26,7 @@ int CalculateArea(int x1, int y1, int x2, int y2)
 // Скорректированная координата y
 int IfBorder(int y, int h) 
 {
-    return (y < 50) ? (y + h + 30) : (y - 15);
+    return (y < BORDER_Y) ? (y + h + Y_PLUS) : (y - Y_MINUS);
 }
 
 

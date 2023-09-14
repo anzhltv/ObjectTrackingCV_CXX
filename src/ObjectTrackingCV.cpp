@@ -1,6 +1,7 @@
 ﻿#include "FindCont.h"
 #include "TrackingAlgorithm.h"
 #include <opencv2/opencv.hpp>
+#include <chrono>
 #include <vector>
 #include <iostream>
 
@@ -10,7 +11,11 @@ constexpr auto PERSENT_SIZE_BOX_R = 0.0076;
 // параметры для обрезки кадра со второй камеры
 constexpr auto PARAM_ROI_B = 4.2; 
 constexpr auto PARAM_ROI_E = 2.5; 
-
+// номера камер
+constexpr int NUM_CAM[] = { 0, 1 };
+// параметры для отображения видео
+constexpr auto PARAM_ROI_W = 1.3;
+constexpr auto PARAM_ROI_H = 0.7;
 
 
 int main() 
@@ -23,14 +28,14 @@ int main()
 
     cv::VideoCapture cap1(path1);
     cv::VideoCapture cap2(path2);
-    cv::Mat frameL, frameR; // Кадры для первой и второй камеры
-    cap1.read(frameL);
-    cap2.read(frameR);
+    cv::Mat frame1_1, frame2_2; // Кадры для первой и второй камеры
+    cap1.read(frame1_1);
+    cap2.read(frame2_2);
 
     const int width = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_WIDTH));
     const int height = static_cast<int>(cap1.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-    frameR = frameR(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height)); // Обрезка кадра
+    frame2_2 = frame2_2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height)); // Обрезка кадра
 
     const auto size1 = static_cast<int>(PERSENT_SIZE_BOX_L * width * height); // Минимальные размеры боксов
     const auto size2 = static_cast<int>(PERSENT_SIZE_BOX_R * width * height);
@@ -61,17 +66,32 @@ int main()
         roi2 = frame2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height));
 
         FindCont findCont;
-        auto detections1 = findCont.GettingCoordinates(frameL, frame1, 2, 3, size1);
-        auto detections2 = findCont.GettingCoordinates(frameR, roi2, 3, 7, size2);
 
-        trackAlg[0].updateCameraTracking(detections1, 0, frame1, count_same, vector_hist, tracker, trackAlg[1]);
-        trackAlg[1].updateCameraTracking(detections2, 1, roi2, count_same, vector_hist, tracker, trackAlg[0]);
+        /*GettingCoordinates
+        метод для для объединения метода Substractor и DetectContour
+        Input:
+        frame1 - кадр с которым производится вычитание, frame2 - новый кадр , kern - размер ядра, iter - количество итераций, size - минимальный размер бокса
+        Output:
+        заполненный вектор detections
+        */
+        auto detections1 = findCont.GettingCoordinates(frame1_1, frame1, NUM_CAM[0], size1);
+        auto detections2 = findCont.GettingCoordinates(frame2_2, roi2, NUM_CAM[1], size2);
+
+        /*
+        метод для обновления трекера, получения гистограмм, поиск сравнения, выполнение алгоритма
+        Input:
+        detections - координаты бокса , numCam - номер камеры, frame -  кадр, countSame - количество одинаковых объектов, vectorHist - сохраненные гистограммы , tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
+        Output:
+        бокс с верно определнным айди на кадре
+        */
+        trackAlg[0].updateCameraTracking(detections1, NUM_CAM[0], frame1, count_same, vector_hist, tracker, trackAlg[1]);
+        trackAlg[1].updateCameraTracking(detections2, NUM_CAM[1], roi2, count_same, vector_hist, tracker, trackAlg[0]);
 
         if (isSuccess1 && isSuccess2) 
         {
             cv::Mat Combi;
             cv::hconcat(frame1, frame2, Combi);
-            cv::resize(Combi, Combi, cv::Size(width * 4 / 3, height * 2 / 3));
+            cv::resize(Combi, Combi, cv::Size(width * PARAM_ROI_W, height * PARAM_ROI_H));
             cv::imshow("Combined", Combi);
         }
 
