@@ -5,11 +5,17 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
+//максимальное количество объектов в кадре
+constexpr auto ALL_ID = 100;
+//номер первого ID (-1, чтобы не совпадало ни с одним из существующих id для первого объекта)
+constexpr auto FIRST_ID = -1;
+//сигнал о наличии объекта во второй камере, если значение становится false - объект появился во второй камере, пока true - объекта нет  
+constexpr auto REPORT = true;
 
 class TrackingAlgorithm 
 {
 public:
-    TrackingAlgorithm() : arrayID(100), idSave(-1), report(true), countFrameCam(0) {};
+    TrackingAlgorithm() : arrayID(ALL_ID), idSave(FIRST_ID), report(REPORT), countFrameCam(0) {};
     int idSave; // предыдущий id объекта
     bool report; // Наличие объекта в камере
     int countFrameCam; //Количество кадров проверки объекта
