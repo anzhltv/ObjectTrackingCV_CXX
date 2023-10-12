@@ -41,6 +41,8 @@ int main()
     NeuralNetworkDetector detectorOpenvino(modelFormatOpenvino, modelPathOpenvino, inputSizeOpenvino);
 
     std::string path1 = "C:/video/Camera3.avi";
+   // std::string path1 = "C:/video/ex.png";
+    cv::Mat image = cv::imread("C:/video/ex1.png");
     std::string path2 = "C:/video/Camera4.avi";
     cv::VideoCapture cap1(path1);
     cv::VideoCapture cap2(path2);
@@ -68,87 +70,116 @@ int main()
         const auto fps = static_cast<int>(cap1.get(cv::CAP_PROP_FPS));
         std::cout << "Frames per second: " << fps;
     }
+    cv::Mat input_frame = detectorOpenvino.data_preparation(image);
 
-    while (cap1.isOpened())
+    InferenceEngine::Blob::Ptr outputBlob = detectorOpenvino.forward(input_frame);
+    std::vector<cv::Rect> detections;
+
+    const auto detectionData = outputBlob->buffer().as<float*>();
+    const auto numDetections = outputBlob->size() / 7;
+
+    for (int i = 0; i < numDetections; ++i)
     {
-        setlocale(LC_ALL, "Russian");
-
-        cv::Mat frame1, mask1, mask2;
-        cv::Mat frame2, roi2;
-
-        bool isSuccess1 = cap1.read(frame1);
-        bool isSuccess2 = cap2.read(frame2);
-
-        roi2 = frame2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height));
-
-        FindCont findCont;
-        auto input_frame = detectorOpenvino.data_preparation(frame1);
-
-         InferenceEngine::Blob::Ptr outputBlob = detectorOpenvino.forward(input_frame);
-         std::vector<cv::Rect> detections;
-
-         const auto detectionData = outputBlob->buffer().as<float*>();
-         const auto numDetections = outputBlob->size()/7; 
-
-         for (int i = 0; i < numDetections; ++i)
-         {
-         float confidence = detectionData[i * 7 + 2];
-         if (confidence == 0)
-         {
-                continue; 
-         }
-         int x1 = static_cast<int>(detectionData[i * 7 + 3] * frame1.cols);
-         int y1 = static_cast<int>(detectionData[i * 7 + 4] * frame1.rows);
-         int x2 = static_cast<int>(detectionData[i * 7 + 5] * frame1.cols);
-         int y2 = static_cast<int>(detectionData[i * 7 + 6] * frame1.rows);
-         
-         cv::Rect detectionRect(x1, y1, x2 - x1, y2 - y1);
-         std::cout << "\n detections  " << detectionData[i * 7 + 0] << " " << detectionData[i * 7 + 1] << " "<< detectionData[i * 7 + 2] <<" " << detectionData[i * 7 + 3] << " " << detectionData[i * 7 + 4] << " " << detectionData[i * 7 + 5] << " " << detectionData[i * 7 + 6] <<  "\n";
-        // cv::rectangle(frame1, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 3);
-         detections.push_back(detectionRect); 
-         }
-
-
-        /*GettingCoordinates
-        метод для для объединения метода Substractor и DetectContour
-        Input:
-        frame1 - кадр с которым производится вычитание, frame2 - новый кадр , kern - размер ядра, iter - количество итераций, size - минимальный размер бокса
-        Output:
-        заполненный вектор detections
-        */
-        auto detections1 = findCont.GettingCoordinates(frame1_1, frame1, NUM_CAM[0], size1);
-        auto detections2 = findCont.GettingCoordinates(frame2_2, roi2, NUM_CAM[1], size2);
-
-        /*
-        метод для обновления трекера, получения гистограмм, поиск сравнения, выполнение алгоритма
-        Input:
-        detections - координаты бокса , numCam - номер камеры, frame -  кадр, countSame - количество одинаковых объектов, vectorHist - сохраненные гистограммы , tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
-        Output:
-        бокс с верно определнным айди на кадре
-        */
-        trackAlg[0].updateCameraTracking(detections1, NUM_CAM[0], frame1, count_same, vector_hist, tracker, trackAlg[1]);
-        trackAlg[1].updateCameraTracking(detections2, NUM_CAM[1], roi2, count_same, vector_hist, tracker, trackAlg[0]);
-
-        if (isSuccess1 && isSuccess2)
+        float confidence = detectionData[i * 7 + 2];
+        if (confidence == 0)
         {
-            cv::Mat Combi;
-            cv::hconcat(frame1, frame2, Combi);
-            cv::resize(Combi, Combi, cv::Size(width * PARAM_ROI_W, height * PARAM_ROI_H));
-            cv::imshow("Combined", Combi);
+            continue;
         }
+        int x1 = static_cast<int>(detectionData[i * 7 + 3] * image.cols);
+        int y1 = static_cast<int>(detectionData[i * 7 + 4] * image.rows);
+        int x2 = static_cast<int>(detectionData[i * 7 + 5] * image.cols);
+        int y2 = static_cast<int>(detectionData[i * 7 + 6] * image.rows);
 
-        if (!isSuccess1 && !isSuccess2)
-        {
-            std::cout << "End of video" << std::endl;
-            break;
-        }
-
-        int key = cv::waitKey(1);
-        if (key == 'q')
-        {
-            std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
-            break;
-        }
+        cv::Rect detectionRect(x1, y1, x2 - x1, y2 - y1);
+        std::cout << "\n detections  " << detectionData[i * 7 + 0] << " " << detectionData[i * 7 + 1] << " " << detectionData[i * 7 + 2] << " " << detectionData[i * 7 + 3] << " " << detectionData[i * 7 + 4] << " " << detectionData[i * 7 + 5] << " " << detectionData[i * 7 + 6] << "\n";
+        cv::rectangle(image, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 3);
+        detections.push_back(detectionRect);
+        cv::imshow("Image", image);
+        cv::imwrite("exdet.png", image);
     }
+
+    
+
+    //while (cap1.isOpened())
+    //{
+    //    setlocale(LC_ALL, "Russian");
+
+    //    cv::Mat frame1, mask1, mask2;
+    //    cv::Mat frame2, roi2;
+
+    //    bool isSuccess1 = cap1.read(frame1);
+    //    bool isSuccess2 = cap2.read(frame2);
+
+    //    roi2 = frame2(cv::Rect(int(width / PARAM_ROI_B), 0, int(width / PARAM_ROI_E), height));
+
+    //    FindCont findCont;
+    //    cv::Mat input_frame = detectorOpenvino.data_preparation(frame1);
+
+    //     InferenceEngine::Blob::Ptr outputBlob = detectorOpenvino.forward(input_frame);
+    //     std::vector<cv::Rect> detections;
+
+    //     const auto detectionData = outputBlob->buffer().as<float*>();
+    //     const auto numDetections = outputBlob->size()/7; 
+
+    //     for (int i = 0; i < numDetections; ++i)
+    //     {
+    //     float confidence = detectionData[i * 7 + 2];
+    //     if (confidence == 0)
+    //     {
+    //            continue; 
+    //     }
+    //     int x1 = static_cast<int>(detectionData[i * 7 + 3] * frame1.cols);
+    //     int y1 = static_cast<int>(detectionData[i * 7 + 4] * frame1.rows);
+    //     int x2 = static_cast<int>(detectionData[i * 7 + 5] * frame1.cols);
+    //     int y2 = static_cast<int>(detectionData[i * 7 + 6] * frame1.rows);
+    //     
+    //     cv::Rect detectionRect(x1, y1, x2 - x1, y2 - y1);
+    //     std::cout << "\n detections  " << detectionData[i * 7 + 0] << " " << detectionData[i * 7 + 1] << " "<< detectionData[i * 7 + 2] <<" " << detectionData[i * 7 + 3] << " " << detectionData[i * 7 + 4] << " " << detectionData[i * 7 + 5] << " " << detectionData[i * 7 + 6] <<  "\n";
+    //     cv::rectangle(frame1, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0, 255, 0), 3);
+    //     detections.push_back(detectionRect); 
+    //     }
+
+
+    //    /*GettingCoordinates
+    //    метод для для объединения метода Substractor и DetectContour
+    //    Input:
+    //    frame1 - кадр с которым производится вычитание, frame2 - новый кадр , kern - размер ядра, iter - количество итераций, size - минимальный размер бокса
+    //    Output:
+    //    заполненный вектор detections
+    //    */
+    //    //auto detections1 = findCont.GettingCoordinates(frame1_1, frame1, NUM_CAM[0], size1);
+    //    //auto detections2 = findCont.GettingCoordinates(frame2_2, roi2, NUM_CAM[1], size2);
+
+    //    /*
+    //    метод для обновления трекера, получения гистограмм, поиск сравнения, выполнение алгоритма
+    //    Input:
+    //    detections - координаты бокса , numCam - номер камеры, frame -  кадр, countSame - количество одинаковых объектов, vectorHist - сохраненные гистограммы , tracker - трекеры объектов, trackAlg - объект класса алгоритма с другой камеры
+    //    Output:
+    //    бокс с верно определнным айди на кадре
+    //    */
+    //    //trackAlg[0].updateCameraTracking(detections1, NUM_CAM[0], frame1, count_same, vector_hist, tracker, trackAlg[1]);
+    //    //trackAlg[1].updateCameraTracking(detections2, NUM_CAM[1], roi2, count_same, vector_hist, tracker, trackAlg[0]);
+
+    //    if (isSuccess1 && isSuccess2)
+    //    {
+    //        cv::Mat Combi;
+    //        cv::hconcat(frame1, frame2, Combi);
+    //        cv::resize(Combi, Combi, cv::Size(width * PARAM_ROI_W, height * PARAM_ROI_H));
+    //        cv::imshow("Combined", Combi);
+    //    }
+
+    //    if (!isSuccess1 && !isSuccess2)
+    //    {
+    //        std::cout << "End of video" << std::endl;
+    //        break;
+    //    }
+
+    //    int key = cv::waitKey(1);
+    //    if (key == 'q')
+    //    {
+    //        std::cout << "q key is pressed by the user. Stopping the video" << std::endl;
+    //        break;
+    //    }
+    //}
     return 0;
 }

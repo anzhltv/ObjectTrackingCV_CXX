@@ -38,7 +38,7 @@ public:
         output
         уменьшенное изображения для подачи на вход сети
         */
-        auto data_preparation(const cv::Mat& frame);
+        cv::Mat data_preparation(const cv::Mat& frame);
 
 
         /*

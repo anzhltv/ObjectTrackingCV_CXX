@@ -1,87 +1,87 @@
-п»ї#include "NetworkOpenvino.h";
+#include "NetworkOpenvino.h";
 
 
 /*
-РїРѕРґРіРѕС‚РѕРІРєР° РІС…РѕРґРЅРѕРіРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ 
-input 
-frame - РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+подготовка входного изображения
+input
+frame - изображение
 output
-СѓРјРµРЅСЊС€РµРЅРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РґР»СЏ РїРѕРґР°С‡Рё РЅР° РІС…РѕРґ СЃРµС‚Рё
+уменьшенное изображения для подачи на вход сети
 */
-auto NeuralNetworkDetector::data_preparation(const cv::Mat& frame) {
-    // РР·РјРµРЅСЏРµРј СЂР°Р·РјРµСЂ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РґРѕ СЂР°Р·РјРµСЂР° РІС…РѕРґР° СЃРµС‚Рё
+cv::Mat NeuralNetworkDetector::data_preparation(const cv::Mat& frame) {
+    // Изменяем размер изображения до размера входа сети
     cv::Mat resized_frame;
     cv::resize(frame, resized_frame, input_size);
 
-    // РџСЂРµРѕР±СЂР°Р·СѓРµРј РёР·РѕР±СЂР°Р¶РµРЅРёРµ РІ РЅСѓР¶РЅС‹Р№ С„РѕСЂРјР°С‚ Рё РїРѕСЂСЏРґРѕРє РєР°РЅР°Р»РѕРІ
+    // Преобразуем изображение в нужный формат и порядок каналов
     cv::Mat input_frame;
-    cv::cvtColor(resized_frame, input_frame, cv::COLOR_BGR2RGB); // РџСЂРµРѕР±СЂР°Р·СѓРµРј BGR РІ RGB
-    resized_frame.convertTo(resized_frame, CV_32F); // РџСЂРµРѕР±СЂР°Р·СѓРµРј Рє С‚РёРїСѓ float32
+    cv::cvtColor(resized_frame, input_frame, cv::COLOR_BGR2RGB); // Преобразуем BGR в RGB
+    resized_frame.convertTo(resized_frame, CV_32F); // Преобразуем к типу float32
     //cv::imshow("input", input_frame);
     return resized_frame;
 }
 
 
 /*
-РѕР±СЂР°Р±РѕС‚РєР° РґР°РЅРЅС‹С… СЃ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ РЅРµР№СЂРѕРЅРЅРѕР№ СЃРµС‚СЊСЋ
+обработка данных с изображения нейронной сетью
 input
-inputFrame - РїРѕРґРіРѕС‚РѕРІР»РµРЅРЅРѕРµ РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+inputFrame - подготовленное изображение
 output
-РІС‹С…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ СЃРµС‚Рё
+выходные данные сети
 */
 Blob::Ptr NeuralNetworkDetector::forward(const cv::Mat& inputFrame) {
-    // РџРѕР»СѓС‡Р°РµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РІС…РѕРґРЅС‹С… РґР°РЅРЅС‹С…
+    // Получаем информацию о входных данных
     ConstInputsDataMap inputsInfo = exec_net.GetInputsInfo();
     if (inputsInfo.size() != 1) {
         throw std::logic_error("Expected exactly one input blob");
     }
 
-    // РџРѕР»СѓС‡Р°РµРј РёРјСЏ РІС…РѕРґРЅРѕРіРѕ Р±Р»РѕР°
+    // Получаем имя входного блоа
     std::string input_name = inputsInfo.begin()->first;
 
-    // РЎРѕР·РґР°РµРј InferRequest
+    // Создаем InferRequest
     InferRequest inferRequest = exec_net.CreateInferRequest();
     try {
-        // РџРѕРґРіРѕС‚Р°РІР»РёРІР°РµРј РІС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ
+        // Подготавливаем входные данные
         Blob::Ptr inputBlob = wrapMat2Blob(inputFrame);
         try
         {
-            // РЈСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІС…РѕРґРЅС‹Рµ РґР°РЅРЅС‹Рµ РІ InferRequest
+            // Устанавливаем входные данные в InferRequest
             inferRequest.SetBlob(input_name, inputBlob);
             try
             {
-                // Р’С‹Р·РѕРІ РёРЅС„РµСЂРµРЅСЃР°
+                // Вызов инференса
                 inferRequest.Infer();
-                // РџРѕР»СѓС‡Р°РµРј СЂРµР·СѓР»СЊС‚Р°С‚С‹ РёРЅС„РµСЂРµРЅСЃР°
+                // Получаем результаты инференса
                 ConstOutputsDataMap outputsInfo = exec_net.GetOutputsInfo();
                 if (outputsInfo.size() != 1)
                 {
                     throw std::logic_error("Expected exactly one output blob");
                 }
 
-                // РџРѕР»СѓС‡Р°РµРј РёРјСЏ РІС‹С…РѕРґРЅРѕРіРѕ
+                // Получаем имя выходного
                 std::string output_name = outputsInfo.begin()->first;
 
-                // РџРѕР»СѓС‡Р°РµРј РІС‹С…РѕРґРЅРѕР№ Р±Р»РѕР° РёР· InferRequest
+                // Получаем выходной блоа из InferRequest
                 Blob::Ptr outputBlob = inferRequest.GetBlob(output_name);
 
                 return outputBlob;
             }
             catch (const InferenceEngine::Exception& e)
             {
-                // РћР±СЂР°Р±РѕС‚РєР° РёСЃРєР»СЋС‡РµРЅРёСЏ, РІРѕР·РЅРёРєС€РµРіРѕ РІРѕ РІСЂРµРјСЏ РёРЅС„РµСЂРµРЅСЃР°
+                // Обработка исключения, возникшего во время инференса
                 std::cerr << "Infer error: " << e.what() << std::endl;
             }
         }
         catch (const InferenceEngine::Exception& e)
         {
-            // РћР±СЂР°Р±РѕС‚РєР° РёСЃРєР»СЋС‡РµРЅРёСЏ, РІРѕР·РЅРёРєС€РµРіРѕ РІРѕ РІСЂРµРјСЏ РёРЅС„РµСЂРµРЅСЃР°
+            // Обработка исключения, возникшего во время инференса
             std::cerr << "SetBlob error: " << e.what() << std::endl;
         }
     }
     catch (const InferenceEngine::Exception& e)
     {
-        // РћР±СЂР°Р±РѕС‚РєР° РёСЃРєР»СЋС‡РµРЅРёСЏ, РІРѕР·РЅРёРєС€РµРіРѕ РІРѕ РІСЂРµРјСЏ РёРЅС„РµСЂРµРЅСЃР°
+        // Обработка исключения, возникшего во время инференса
 
         std::cerr << "wrapMat2Blob error: " << e.what() << std::endl;
         Blob::Ptr outputBlob;
@@ -91,11 +91,11 @@ Blob::Ptr NeuralNetworkDetector::forward(const cv::Mat& inputFrame) {
 
 
 /*
-РїРµСЂРµРІРѕРґ РґР°РЅРЅС‹С… РёР· Mat РІ Blob
+перевод данных из Mat в Blob
 input
-mat - РёР·РѕР±СЂР°Р¶РµРЅРёРµ
+mat - изображение
 output
-РґР°РЅРЅС‹Рµ РІ С„РѕСЂРјР°С‚Рµ blob c precision FP32
+данные в формате blob c precision FP32
 */
 InferenceEngine::Blob::Ptr NeuralNetworkDetector::wrapMat2Blob(const cv::Mat& mat)
 {
