@@ -20,21 +20,21 @@ std::vector<std::vector<int>> EuclideanDistTracker::update(const std::vector<cv:
 
     for (auto rect : objectsRect) 
     {
-        int x = rect.x;
-        int y = rect.y;
-        int w = rect.width;
-        int h = rect.height;
+        const int x = rect.x;
+        const int y = rect.y;
+        const int w = rect.width;
+        const int h = rect.height;
         //центры нового объекта 
-        int cx = (x + x + w) / 2;
-        int cy = (y + y + h) / 2;
+        const int cx = (x + x + w) / 2;
+        const int cy = (y + y + h) / 2;
 
         auto sameObjectDetected = false;
         auto dist = 0.0;
 
         for (auto& kv : centerPoints) 
         {
-            int id = kv.first;
-            cv::Point2i pt = kv.second;
+            const int id = kv.first;
+            const cv::Point2i pt = kv.second;
             //подсчет евклидового расстояния 
             dist = std::sqrt(std::pow(cx - pt.x, 2) + std::pow(cy - pt.y, 2));
             //если расстояние меньше определенной величины, то добавляем координаты к предыдущему id и sameObjectDetected=True

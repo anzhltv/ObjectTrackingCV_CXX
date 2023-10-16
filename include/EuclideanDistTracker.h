@@ -18,5 +18,6 @@ public:
     */
     std::vector<std::vector<int>> update(const std::vector<cv::Rect>& objectsRect); //обновление трекера 
 private:
+    // map для сохранения предыдущего центра объекта
     std::map<int, cv::Point2i> centerPoints;
 };
